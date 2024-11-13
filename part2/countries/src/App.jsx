@@ -1,7 +1,7 @@
-// App.jsx
 import { useState, useEffect } from "react";
 import CountryList from "./components/CountryList";
 import CountryDetails from "./components/CountryDetails";
+import countriesService from "./services/countries";
 import "./App.css";
 
 const App = () => {
@@ -14,12 +14,11 @@ const App = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
-        const data = await response.json();
+        const data = await countriesService.getAllCountries();
         setCountries(data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        console.error("Error fetching countries:", error);
         setLoading(false);
       }
     };
@@ -49,7 +48,7 @@ const App = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading countries</div>;
+    return <div className="loading">Loading countries...</div>;
   }
 
   return (
@@ -69,16 +68,18 @@ const App = () => {
       </div>
 
       {filteredCountries.length > 10 ? (
-        <div className="message">Too many matches, please specify your query</div>
+        <div className="message">
+          Too many matches, please specify your query
+        </div>
       ) : filteredCountries.length > 1 ? (
-        <CountryList 
-          countries={filteredCountries} 
-          onShowCountry={handleShowCountry} 
+        <CountryList
+          countries={filteredCountries}
+          onShowCountry={handleShowCountry}
         />
       ) : filteredCountries.length === 1 ? (
         <CountryDetails country={filteredCountries[0]} />
-      ) : query && (
-        <div className="message">No matches found</div>
+      ) : (
+        query && <div className="message">No matches found</div>
       )}
 
       {selectedCountry && <CountryDetails country={selectedCountry} />}
