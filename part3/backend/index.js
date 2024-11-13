@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
+
 const app = express();
 
 // Middleware untuk CORS, parsing JSON, dan logging
@@ -58,13 +59,6 @@ app.post("/api/persons", (req, res) => {
   persons.push(newPerson);
   res.status(201).json(newPerson); // Mengembalikan entri baru dengan status 201
 });
-app.post("/api/persons", (req, res) => {
-  console.log("Request body:", req.body); // Log data request
-  // Rute selanjutnya
-});
 
-// Menjalankan server di port 3001
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
-});
+// Export handler untuk digunakan di Vercel
+module.exports = app;
