@@ -5,6 +5,7 @@ const Person = require("./models/persons");
 const morgan = require("morgan");
 const cors = require("cors");
 
+app.use(express.static("build"));
 app.use(cors());
 app.use(express.json());
 app.use(morgan("tiny"));
@@ -50,13 +51,15 @@ app.post("/api/persons", (req, res, next) => {
 
 // Rute untuk menghapus person berdasarkan ID (DELETE)
 app.delete("/api/persons/:id", (req, res, next) => {
-  Person.findByIdAndDelete(req.params.id)
+  Person.findById(req.params.id)
     .then((person) => {
-      if (person) {
-        res.status(204).end();
-      } else {
-        res.status(404).json({ error: "Person not found" });
+      if (!person) {
+        return res.status(404).json({ error: "Person not found" });
       }
+      const name = person.name;
+      return Person.findByIdAndDelete(req.params.id).then(() => {
+        res.status(200).json({ message: `Delete for ${name} successful` });
+      });
     })
     .catch((error) => next(error));
 });
@@ -103,10 +106,10 @@ app.get("/info", (req, res, next) => {
 const errorHandler = (error, request, response, next) => {
   console.error(error.message);
 
-  if (error.name === "CastError" && error.kind === "ObjectId") {
-    return response.status(400).send({ error: "malformatted id" });
-  } else if (error.name === "ValidationError") {
+  if (error.name === "ValidationError") {
     return response.status(400).json({ error: error.message });
+  } else if (error.name === "CastError" && error.kind === "ObjectId") {
+    return response.status(400).json({ error: "malformatted id" });
   }
 
   next(error);

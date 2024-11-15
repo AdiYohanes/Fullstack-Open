@@ -3,7 +3,12 @@ const baseUrl = "http://localhost:3001/api/persons";
 
 const getAll = () => axios.get(baseUrl).then((response) => response.data);
 const create = (newPerson) =>
-  axios.post(baseUrl, newPerson).then((response) => response.data);
+  axios
+    .post(baseUrl, newPerson)
+    .then((response) => response.data)
+    .catch((error) => {
+      throw error.response.data.error;
+    });
 const update = (id, updatedPerson) =>
   axios
     .put(`${baseUrl}/${id}`, updatedPerson)

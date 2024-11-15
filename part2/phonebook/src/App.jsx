@@ -10,7 +10,8 @@ const App = () => {
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
   const [notificationMessage, setNotificationMessage] = useState(null);
-  const [notificationType, setNotificationType] = useState("success"); // Menyimpan tipe notifikasi
+  const [notificationType, setNotificationType] = useState("success");
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     personService
@@ -28,67 +29,26 @@ const App = () => {
   const addPerson = (event) => {
     event.preventDefault();
     const personObject = { name: newName.trim(), number: newNumber.trim() };
-    const existingPerson = persons.find(
-      (person) => person.name === personObject.name
-    );
 
-    if (existingPerson) {
-      const confirmUpdate = window.confirm(
-        `${newName} is already added to the phonebook, replace the old number with a new one?`
-      );
-      if (confirmUpdate) {
-        personService
-          .update(existingPerson.id, { ...existingPerson, number: newNumber })
-          .then((returnedPerson) => {
-            setPersons(
-              persons.map((person) =>
-                person.id === existingPerson.id ? returnedPerson : person
-              )
-            );
-            setNotificationMessage(`Updated ${returnedPerson.name}`);
-            setNotificationType("success");
-            setTimeout(() => {
-              setNotificationMessage(null);
-            }, 5000);
-            setNewName("");
-            setNewNumber("");
-          })
-          .catch((error) => {
-            setNotificationMessage(
-              `Information of ${existingPerson.name} has already been removed from the server`
-            );
-            setNotificationType("error");
-            setTimeout(() => {
-              setNotificationMessage(null);
-            }, 5000);
-            setPersons(
-              persons.filter((person) => person.id !== existingPerson.id)
-            );
-          });
-      }
-    } else {
-      personService
-        .create(personObject)
-        .then((returnedPerson) => {
-          setPersons([...persons, returnedPerson]);
-          setNotificationMessage(`Added ${returnedPerson.name}`);
-          setNotificationType("success");
-          setTimeout(() => {
-            setNotificationMessage(null);
-          }, 5000);
-          setNewName("");
-          setNewNumber("");
-        })
-        .catch((error) => {
-          setNotificationMessage(
-            "Failed to add the contact. Please try again."
-          );
-          setNotificationType("error");
-          setTimeout(() => {
-            setNotificationMessage(null);
-          }, 5000);
-        });
-    }
+    personService
+      .create(personObject) 
+      .then((returnedPerson) => {
+        setPersons([...persons, returnedPerson]);
+        setNotificationMessage(`Added ${returnedPerson.name}`);
+        setNotificationType("success");
+        setNewName("");
+        setNewNumber("");
+      })
+      .catch((error) => {
+        console.log(error.response); // Debugging
+        setNotificationMessage(
+          error.response?.data?.error || "Failed to add the contact."
+        );
+        setNotificationType("error");
+        setTimeout(() => {
+          setNotificationMessage(null);
+        }, 5000);
+      });
   };
 
   const deletePerson = (id, name) => {

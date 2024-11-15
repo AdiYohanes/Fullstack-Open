@@ -20,10 +20,21 @@ mongoose
 const personSchema = new mongoose.Schema({
   name: {
     type: String,
+    minLength: 3,
     required: true,
-    minLenght: 5,
   },
-  number: Number,
+  number: {
+    type: String,
+    required: true,
+    minLength: 8,
+    validate: {
+      validator: function (v) {
+        return /^\d{2,3}-\d+$/.test(v); // Custom validator untuk format nomor
+      },
+      message: (props) =>
+        `${props.value} is not a valid phone number! It should be in the format xx-xxxxxxx or xxx-xxxxxxx.`,
+    },
+  },
 });
 
 // Konfigurasi toJSON agar _id diubah menjadi id dan menghapus __v
