@@ -1,67 +1,119 @@
+require("dotenv").config();
 const express = require("express");
+const app = express();
+const Person = require("./models/persons");
 const morgan = require("morgan");
 const cors = require("cors");
 
-const app = express();
-
-// Middleware untuk CORS, parsing JSON, dan logging
 app.use(cors());
 app.use(express.json());
 app.use(morgan("tiny"));
 
-// Data yang di-hardcode untuk buku telepon
-let persons = [
-  { id: "1", name: "Arto Hellas", number: "040-123456" },
-  { id: "2", name: "Ada Lovelace", number: "39-44-5323523" },
-  { id: "3", name: "Dan Abramov", number: "12-43-234345" },
-  { id: "4", name: "Mary Poppendieck", number: "39-23-6423122" },
-];
-
-// Rute untuk mengambil semua data persons
-app.get("/api/persons", (req, res) => {
-  res.json(persons);
+// Rute untuk mengambil semua persons dari database (READ - GET)
+app.get("/api/persons", (req, res, next) => {
+  Person.find({})
+    .then((persons) => res.json(persons))
+    .catch((error) => next(error));
 });
 
-// Rute untuk menampilkan informasi jumlah entri dan waktu saat request diterima
-app.get("/api/info", (req, res) => {
-  const currentTime = new Date();
-  res.send(`
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${currentTime}</p>
-  `);
+// Rute untuk mengambil satu person berdasarkan ID (READ - GET)
+app.get("/api/persons/:id", (req, res, next) => {
+  Person.findById(req.params.id)
+    .then((person) => {
+      if (person) {
+        res.json(person);
+      } else {
+        res.status(404).json({ error: "Person not found" });
+      }
+    })
+    .catch((error) => next(error));
 });
 
-// Rute untuk mendapatkan data berdasarkan ID
-app.get("/api/persons/:id", (req, res) => {
-  const person = persons.find((p) => p.id === req.params.id);
-  person
-    ? res.json(person)
-    : res.status(404).json({ error: "Person not found" });
-});
-
-// Rute untuk menghapus entri berdasarkan ID
-app.delete("/api/persons/:id", (req, res) => {
-  const { id } = req.params;
-  persons = persons.filter((person) => person.id !== id);
-  res.status(204).end(); // Status 204 untuk operasi sukses tanpa body
-});
-
-// Rute untuk menambah entri baru ke buku telepon
-app.post("/api/persons", (req, res) => {
+// Rute untuk menambahkan person baru (CREATE - POST)
+app.post("/api/persons", (req, res, next) => {
   const { name, number } = req.body;
 
-  if (!name || !number)
+  if (!name || !number) {
     return res.status(400).json({ error: "name and number are required" });
-  if (persons.some((person) => person.name === name))
-    return res.status(400).json({ error: "name must be unique" });
+  }
 
-  const newPerson = { id: String(Math.random() * 1000), name, number };
-  persons.push(newPerson);
-  res.status(201).json(newPerson); // Mengembalikan entri baru dengan status 201
+  const person = new Person({
+    name,
+    number,
+  });
+
+  person
+    .save()
+    .then((savedPerson) => res.status(201).json(savedPerson))
+    .catch((error) => next(error));
 });
 
-// Menjalankan server di port 3001
-const PORT = 3001;
+// Rute untuk menghapus person berdasarkan ID (DELETE)
+app.delete("/api/persons/:id", (req, res, next) => {
+  Person.findByIdAndDelete(req.params.id)
+    .then((person) => {
+      if (person) {
+        res.status(204).end();
+      } else {
+        res.status(404).json({ error: "Person not found" });
+      }
+    })
+    .catch((error) => next(error));
+});
+
+// Rute untuk memperbarui person berdasarkan ID (UPDATE - PUT)
+app.put("/api/persons/:id", (req, res, next) => {
+  const { name, number } = req.body;
+
+  if (!name || !number) {
+    return res.status(400).json({ error: "name and number are required" });
+  }
+
+  const person = { name, number };
+
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
+    .then((updatedPerson) => {
+      if (updatedPerson) {
+        res.json(updatedPerson);
+      } else {
+        res.status(404).json({ error: "Person not found" });
+      }
+    })
+    .catch((error) => next(error));
+});
+
+// Rute info untuk menampilkan jumlah total entri dan waktu saat ini
+app.get("/info", (req, res, next) => {
+  Person.countDocuments({})
+    .then((count) => {
+      const currentTime = new Date();
+      res.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${currentTime}</p>
+      `);
+    })
+    .catch((error) => next(error));
+});
+
+// Middleware untuk menangani error
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError" && error.kind === "ObjectId") {
+    return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
+  }
+
+  next(error);
+};
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
