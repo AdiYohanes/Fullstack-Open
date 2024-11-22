@@ -56,26 +56,51 @@ blogRouter.get("/", async (request, response) => {
 blogRouter.delete("/:id", authenticator, async (request, response) => {
   try {
     const blogId = request.params.id;
-
     const blog = await Blog.findById(blogId);
-
     if (!blog) {
       return response.status(404).json({ error: "Blog not found" });
     }
-
+    // Periksa apakah pengguna adalah pemilik blog
     if (blog.user.toString() !== request.user.id.toString()) {
       return response
         .status(403)
         .json({ error: "You are not authorized to delete this blog" });
     }
-
     await Blog.findByIdAndDelete(blogId);
+    console.log(`Blog with id ${blogId} has been deleted`);
+
     response
-      .status(204)
-      .json({ message: `Blog with id ${blogId} deleted` })
-      .end();
+      .status(200)
+      .json({ message: `Blog with id ${blogId} has been deleted` });
   } catch (error) {
+    // Tangani error
     console.error("Error deleting blog:", error.message);
+    response.status(400).json({ error: error.message });
+  }
+});
+
+// POST update blog by id
+blogRouter.put("/:id", authenticator, async (request, response) => {
+  try {
+    const blogId = request.params.id;
+    const { title, url, likes } = request.body;
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      blogId,
+      { title, url, likes },
+      { new: true },
+      { runValidators: true }
+    );
+
+    if (!updatedBlog) {
+      return response.status(404).json({ error: "Blog not found" });
+    }
+
+    response.status(200).json({
+      updatedBlog,
+      message: `Blog with id ${blogId} has been updated`,
+    });
+  } catch (error) {
     response.status(400).json({ error: error.message });
   }
 });

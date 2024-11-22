@@ -60,7 +60,7 @@ usersRouter.post("/", async (request, response, next) => {
     });
 
     console.log("JWT generated successfully");
-    console.log("Token Payload", tokenPayload)
+    console.log("Token Payload", tokenPayload);
 
     // Kirim respons sukses
     response.status(200).json({
