@@ -105,4 +105,44 @@ blogRouter.put("/:id", authenticator, async (request, response) => {
   }
 });
 
+// GET blog by id
+blogRouter.get("/:id", async (request, response) => {
+  try {
+    const blogId = request.params.id;
+
+    const blog = await Blog.findById(blogId)
+      .populate("user", { username: 1, name: 1 })
+      .exec();
+
+    if (!blog) {
+      return response.status(404).json({ error: "Blog not found" });
+    }
+
+    response.status(200).json(blog);
+  } catch (error) {
+    console.error("Error fetching blog by id:", error.message);
+    response.status(400).json({ error: "Invalid blog ID" });
+  }
+});
+
+// GET blog by id
+blogRouter.get("/:id", async (request, response) => {
+  try {
+    const blogId = request.params.id;
+
+    const blog = await Blog.findById(blogId)
+      .populate("user", { username: 1, name: 1 })
+      .exec();
+
+    if (!blog) {
+      return response.status(404).json({ error: "Blog not found" });
+    }
+
+    response.status(200).json(blog);
+  } catch (error) {
+    console.error("Error fetching blog by id:", error.message);
+    response.status(400).json({ error: "Invalid blog ID" });
+  }
+});
+
 module.exports = blogRouter;
