@@ -1,0 +1,29 @@
+{
+  "anecdotes": [
+    {
+      "id": "4de6",
+      "content": "asd",
+      "votes": 7
+    },
+    {
+      "id": "285d",
+      "content": "asd",
+      "votes": 21
+    },
+    {
+      "id": "7d48",
+      "content": "bubuub",
+      "votes": 0
+    },
+    {
+      "id": "2d82",
+      "content": "goodjob",
+      "votes": 2
+    },
+    {
+      "id": "e967",
+      "content": "gooday",
+      "votes": 0
+    }
+  ]
+}

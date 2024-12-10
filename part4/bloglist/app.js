@@ -9,6 +9,7 @@ const logger = require("./utils/logger");
 const usersRouter = require("./controllers/users");
 const loginRouter = require("./controllers/login");
 const logoutRouter = require("./controllers/logout");
+const testingRouter = require("./controllers/testing");
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use("/api/login", loginRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/blogs", blogsRouter);
 app.use("/api/logout", logoutRouter);
+if (process.env.NODE_ENV === "test") {
+  app.use("/api/testing", testingRouter);
+}
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);
